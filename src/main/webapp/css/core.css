@@ -1,0 +1,29 @@
+body 
+{
+	background-color: #015C65;
+}
+
+#info-panel 
+{
+	background-color: #35C0CD;
+	width: 100%;
+	vertical-align: top;
+}
+
+#info-table {
+	width: 100%;
+}
+
+.label, .value {
+	background-color: #028E9B;
+	font-family: monospace;
+	font-size: 18px;
+}
+
+.value {
+	width: 100%;
+}
+
+canvas {
+	cursor: none;
+}
