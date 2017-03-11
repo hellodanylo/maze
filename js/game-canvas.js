@@ -1,19 +1,88 @@
+// Copyright 2012-2017 Danylo Vashchilenko
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+import React from 'react';
+import { vec3, mat4 } from 'gl-matrix';
+import { sprintf } from 'sprintf-js';
+import { blocks } from './maze.js';
+
 var gl;
 
-function initGL(canvas) {
-	try {
-		gl = canvas.getContext("experimental-webgl");
-		gl.viewportWidth = canvas.width;
-		gl.viewportHeight = canvas.height;
-	} catch (e) {
-	}
+// Callbacks
+var onWorldChange;
+var onMinimapToggle;
+var onLevelFinished;
 
-	if (!gl) {
-		alert("Could not initialise WebGL, sorry :-(");
-        return false;
-	}
+export default class GameCanvas extends React.Component {
+  constructor(props) {
+    super();
+    this.state = {};
+    onWorldChange = props.onWorldChange;
+    onMinimapToggle = props.onMinimapToggle;
+    onLevelFinished = props.onLevelFinished;
+  }
 
-    return true;
+  setup(canvasDOM) {
+    try {
+		  gl = canvasDOM.getContext("webgl");
+		  gl.viewportWidth = canvasDOM.width;
+		  gl.viewportHeight = canvasDOM.height;
+	  } catch (err) { 
+      console.error(err);
+    }
+
+    if (!gl) {
+      this.setState({error: true});
+      return;
+    }
+
+    initShaders();
+    initBuffers();
+    initTexture();
+
+    world.level = this.props.level;
+    
+    mat4.perspective(pMatrix, -80.0, gl.viewportWidth / gl.viewportHeight, 0.1,
+        300.0);
+    gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, false, pMatrix);
+
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    gl.enable(gl.DEPTH_TEST);
+
+    document.onkeydown = handleKeyDown;
+    document.onkeyup = handleKeyUp;
+
+    world.tick(1);
+  }
+
+  shouldComponentUpdate(nextProps, nextState) {
+    return false;
+  }
+
+  render() {
+    if(this.state.error) {
+      return React.createElement('div', {className: 'error'}, 'Error');
+    }
+
+    return React.createElement('canvas', {
+      width: 800, 
+      height: 600,
+      ref: (domElement) => {
+        this.setup(domElement)
+      }
+    }, null);
+  }
 }
 
 function getShader(gl, id) {
@@ -107,15 +176,12 @@ var textures = {};
 function loadTexture(path, id) {
 	var image = new Image();
 
-	var texture = gl.createTexture();
-	texture.image = image;
-	textures[id] = texture;
-
-	(function(texture) {
-		image.onload = function() {
-			handleLoadedTexture(texture);
-		}
-	})(texture);
+	image.onload = function() {
+		const texture = gl.createTexture();
+		texture.image = image;
+		textures[id] = texture;
+		handleLoadedTexture(texture);
+	};
 
 	image.src = path;
 }
@@ -140,15 +206,18 @@ var floorVertexTextureCoordBuffer;
 var cubeVertexPositionBuffer;
 var cubeVertexIndexBuffer;
 var cubeVertexColorBuffer;
+var cubeVertexTextureCoordBuffer;
 
 function initBuffers() {
 	floorVertexPositionBuffer = gl.createBuffer();
 	gl.bindBuffer(gl.ARRAY_BUFFER, floorVertexPositionBuffer);
 
-	var vertices = [ -1.0, 0.0, 1.0, 
-	                 1.0, 0.0, 1.0, 
-	                 -1.0, 0.0, -1.0,
-			1.0, 0.0, -1.0, ];
+	var vertices = [ 
+		-1.0, 0.0,  1.0,
+		 1.0, 0.0,  1.0, 
+	  -1.0, 0.0, -1.0,
+		 1.0, 0.0, -1.0, 
+	];
 
 	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
 	floorVertexPositionBuffer.itemSize = 3;
@@ -232,6 +301,8 @@ function initBuffers() {
 
 var currentlyPressedKeys = {};
 
+var lastPP = {};
+
 var player = {
 
 	state: 0,
@@ -252,11 +323,13 @@ var player = {
 	tick : (function(world, pressedKeys, ellapsed) {
 		
 		if(world.localTick < 10000 && player.state == 0) {
+			console.log('Map overview started.');
 			player.position = vec3.fromValues(0, 90, 0);
 			player.up = vec3.fromValues(0, 90, 10);
 			player.direction = vec3.fromValues(0, -1, 0);
 			player.state = 1;
 		} else if(world.localTick > 10000 && player.state == 1) {
+			console.log('Map overview finished.');
 			player.position = vec3.fromValues(-88, 4, -88);
 			player.up = vec3.fromValues(0, 10, 0);
 			player.direction = vec3.fromValues(0, 0, 1);
@@ -282,24 +355,21 @@ var player = {
 			var newPosition = vec3.add({}, player.position, vec3.scale({}, player.direction, distance));
 			
 			var farDistance = distance + 0.7;
-			farPosition = vec3.add({}, player.position, vec3.scale({}, 
+			var farPosition = vec3.add({}, player.position, vec3.scale({}, 
 					player.direction, farDistance));
 			
 			var x = Math.floor((farPosition[0]+100)/8);
 			var y = Math.floor((farPosition[2]+100)/8);
 			
-			if(world.level[x][y] == 0) {
+			if(world.level[x][y] === blocks.EMPTY) {
 				player.position = newPosition;
 				
 				player.distanceWalked += distance;
 				
 				if(x == 23 && y == 23) {
-					var soundHandle = document.getElementById('soundHandle');
-					if(!soundHandle.endMusic) {
-						soundHandle.src = 'sounds/end.mp3';
-						soundHandle.play();
-						soundHandle.endMusic = true;
-					}
+          if(onLevelFinished) {
+            onLevelFinished();
+          }
 				}
 			}
 		}
@@ -311,6 +381,13 @@ var player = {
 			vec3.add(player.position, player.position, vec3.scale({},
 					player.direction, -distance));
 		}
+
+    const px = Math.floor((player.position[0]+100)/8);
+	  const py = Math.floor((player.position[2]+100)/8);
+    if(lastPP.x !== px && lastPP.y !== py) {
+      lastPP = {x: px, y: py};
+      setTimeout(_ => onWorldChange({position: lastPP}),0);
+    }
 
 		// Spacebar
 		if (pressedKeys[32] && player.jumpStage == 0
@@ -348,6 +425,14 @@ function handleKeyDown(event) {
 
 function handleKeyUp(event) {
 	currentlyPressedKeys[event.keyCode] = false;
+
+  if(event.keyCode === 81 && !player.toggling) {
+    player.toggling = true;
+    setTimeout(onMinimapToggle, 0);
+    setTimeout(() => {
+      player.toggling = false;
+    }, 1);
+  }
 }
 
 var mMatrixStack = [];
@@ -451,7 +536,7 @@ function drawScene(world) {
 	for ( var x = 0; x < world.level.length; x++) {
 		for ( var y = 0; y < world.level[0].length; y++) {
 
-			if (world.level[x][y] == 0)
+			if (world.level[x][y] === blocks.EMPTY)
 				continue;
 			
 			var texture;
@@ -480,81 +565,19 @@ function drawScene(world) {
 
 var lastTime = 0;
 
-function animate() {
-	var timeNow = new Date().getTime();
-	if (lastTime != 0) {
-		var elapsed = timeNow - lastTime;
-
-		cubeAngle += 0.002 * elapsed;
-	}
-	lastTime = timeNow;
-}
-
 function generateCallback(world) {
-	return (function(then) {
-		return (function() {
+  const then = new Date().getTime();
+	return _ => {
 			world.tick((new Date()).getTime() - then);
-		});
-	})(new Date());
+  };
 }
 
-
-
-function loadLevel(world) {
-	var request = new XMLHttpRequest();
-	request.open("GET", "./api/level?gameId=" + gameId, false);
-	request.send();
-
-	world.level = JSON.parse(request.responseText).maze;
-}
-
-var world = {width: 100, height: 100, cubeSize: 4,
+var world = {width: 100, height: 100, cubeSize: 2,
 		tick: function tick(ellapsed) {
-			requestAnimFrame(generateCallback(this));
-
+			requestAnimationFrame(generateCallback(this));
 			world.localTick += ellapsed;
-			
 			player.tick(this, currentlyPressedKeys, ellapsed);
-
-			document.getElementById("location").innerHTML = sprintf("%.2f, %.2f, %.2f",
-					player.position[0], player.position[1], player.position[2]);
-			
-			document.getElementById("distanceWalked").innerHTML = sprintf("%.2f",
-					player.distanceWalked);
-
 			drawScene(this);
-			animate();
 		},
 		localTick: 0
 };
-
-function webGLStart() {
-	var canvas = document.getElementById("canvas");
-
-	var result = initGL(canvas);
-
-    if(!result) {
-        return;
-    }
-
-	initShaders();
-	loadLevel(world);
-	initBuffers();
-	initTexture();
-	
-	var soundHandle = document.getElementById('soundHandle');
-	soundHandle.src = 'sounds/welcome.mp3';
-	soundHandle.play();
-
-	mat4.perspective(pMatrix, -80.0, gl.viewportWidth / gl.viewportHeight, 0.1,
-			300.0);
-	gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, false, pMatrix);
-
-	gl.clearColor(0.0, 0.0, 0.0, 1.0);
-	gl.enable(gl.DEPTH_TEST);
-
-	document.onkeydown = handleKeyDown;
-	document.onkeyup = handleKeyUp;
-
-	world.tick(1);
-}

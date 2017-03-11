@@ -1,4 +1,0 @@
-{
-	"gameId": ${gameId},
-	"maze": ${maze}
-}
