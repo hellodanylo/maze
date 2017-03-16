@@ -3,7 +3,10 @@
   "version": "2.0.0",
   "description": "A 3D browser game featuring a randomly generated maze.",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "gulp build",
+    "build-watch": "gulp build-watch",
+    "start-watch": "nodemon -w index.js index.js"
   },
   "repository": {
     "type": "git",
@@ -16,15 +19,24 @@
   },
   "homepage": "https://github.com/equalsdanny/maze#readme",
   "dependencies": {
-    "react": "15.4.2",
-    "react-dom": "15.4.2",
+    "babelify": "^7.3.0",
+    "co": "^4.6.0",
+    "concat-stream": "^1.6.0",
+    "express": "4.15.2",
     "gl-matrix": "2.3.2",
-    "sprintf-js": "1.0.3",
-    "express": "4.15.2"
+    "mustache": "^2.3.0",
+    "react": "^15.4.2",
+    "react-dom": "^15.4.2",
+    "sprintf-js": "1.0.3"
   },
   "devDependencies": {
+    "babel-plugin-transform-async-to-generator": "^6.22.0",
+    "babel-plugin-transform-es2015-modules-commonjs": "^6.24.0",
+    "babel-preset-react": "^6.23.0",
+    "browserify": "^14.1.0",
+    "gulp": "^3.9.1",
     "nodemon": "^1.11.0",
-    "webpack": "^2.2.1",
-    "webpack-dev-middleware": "^1.10.1"
+    "vinyl-source-stream": "^1.1.0",
+    "watchify": "^3.9.0"
   }
 }

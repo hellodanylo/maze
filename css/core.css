@@ -2,31 +2,80 @@ body {
 	background-color: #353535;
 	display: flex;
 
-	height: 100%;
 	justify-content: space-around;
 	align-items: center;
 }
 
+#app {
+	width: 100%;
+}
+
+.screen {
+	flex: 0 0 800px;
+}
+
 canvas {
 	cursor: none;
-	box-shadow: 0px 0px 40px #ababab;
-	margin: auto;
+	box-shadow: 0px 0px 80px #ababab;
+	align-self: center;
 }
 
 main {
 	display: flex;
-	align-items: center;
+	flex-flow: row wrap;
+	justify-content: space-around;
+}
+
+aside {
+	flex: 0 0 calc(10px*35);
+
+	display: flex;
+	flex-flow: column nowrap;	
+
+	justify-content: space-between;
+}
+
+.rules, .minimap {
+	box-shadow: 5px 5px 40px black;
+}
+
+.rules {
+	font-size: 1.6em;
+	font-family: monospace;
+	
+	color: #b8b8b8;
+	background-color: #141414;
+
+	padding: 1em 1em;
+	text-shadow: 1px 1px 10px #595959;
+}
+
+p {
+	margin: 0.1em;
+}
+
+h2 {
+	font-size: 1.1em;
+	font-weight: 900;
+	font-style: normal;
+
+	display: inline-block;
+	margin-top: 0em;
+	margin-bottom: 0.1em;
+}
+
+.rules section:nth-child(1) {
+	margin-bottom: 1em;
 }
 
 .minimap {
 	display: flex;
-	background-color: lightgrey;
-	box-shadow: 5px 5px 40px black;
+	background-color: #343434;
 }
 
 .minimap .cell {
-	width: 0.7em;
-	height: 0.7em;
+	width: 10px;
+	height: 10px;
 }
 
 .minimap .cell--wall {
@@ -34,5 +83,93 @@ main {
 }
 
 .minimap .cell--player {
+	background-color: #19c019;
+}
+
+.minimap .cell--target {
 	background-color: red;
+}
+
+.overlay {
+	display: flex;
+	align-items: center;
+	justify-content: space-around;
+
+	position: absolute;
+	width: 100%;
+	height: 100%;
+
+	cursor: default;
+
+	background-color: rgba(0, 0, 0, 0.67);
+	font-size: 500px;
+	font-family: sans-serif;
+}
+
+.overlay span {
+	display: block;
+	margin-top: -60px;
+}
+
+button {
+	background-color: rgba(0, 0, 0, 0.5);
+	border: 1px solid black;
+
+	box-shadow: inset 0px 0px 30px rgba(0,0,0,1),
+		0px 0px 30px rgba(0,0,0,1);
+
+	padding: 0.3em;
+
+	font-size: 70px;
+	
+	color: black;
+	font-weight: 700;
+	text-shadow: 0px 0px 10px rgba(255, 255, 255, 0.21);
+
+	cursor: pointer;
+}
+
+button:hover {
+	color: grey;
+}
+
+button:focus {
+	outline: 0;
+}
+
+.screen {
+	position: relative;
+	display: flex;
+}
+
+.progress {
+	color: #888888;
+	text-shadow: 0px 0px 30px rgba(0, 0, 0, 0.98);
+	font-family: Arial;
+	font-size: 10em;
+
+	cursor: default;
+	user-select: none;
+}
+
+main.welcome button {
+	flex: 0 0 10ch;
+	font-size: 70px;
+}
+
+main.welcome button.wait {
+	opacity: 0;
+}
+
+main.welcome button.play {
+	animation: fadein 3s;
+}
+
+@keyframes fadein {
+	0% {
+		opacity: 0;
+	}
+	100% {
+		opacity: 1;
+	}
 }
