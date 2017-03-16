@@ -1,6 +1,6 @@
 {
   "name": "maze",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "A 3D browser game featuring a randomly generated maze.",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",

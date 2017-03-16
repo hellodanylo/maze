@@ -20,8 +20,8 @@ function fetch(path) {
 }
 
 const app = express();
-app.use(path.join(PREFIX, '/'), express.static(path.join(__dirname, DIST)));
-app.get(path.join(PREFIX, '/'), (req, res) => {
+app.use('/', express.static(path.join(__dirname, DIST)));
+app.get('/', (req, res) => {
   co(function*() {
     const template = yield fetch(ROOT_TEMPLATE);
     res.send(mustache.render(template, {PREFIX}));

@@ -140,7 +140,7 @@ export default class Canvas extends React.Component {
 			<div className="screen">
 				<canvas width="800" height="600" ref={this.setup}/>
 				{this.state.overlay && <div className="overlay">{this.state.overlay}</div>}
-				<audio src={`./track${this.state.track}.mp3`} autoPlay={true}/>
+				<audio src={PREFIX+`/track${this.state.track}.mp3`} autoPlay={true}/>
 			</div>
 		);
   }
