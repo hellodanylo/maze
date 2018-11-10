@@ -7,7 +7,7 @@ const concat = require('concat-stream');
 const co = require('co');
 
 const DIST = 'dist';
-const PORT = process.argv[2]||9000;
+const PORT = process.argv[2]||80;
 const PREFIX = process.argv[3]||'';
 const ROOT_TEMPLATE = path.join(__dirname, 'html', 'index.html');
 
