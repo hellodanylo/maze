@@ -3,7 +3,7 @@ FROM node:8-alpine
 WORKDIR /maze
 
 COPY package.json ./
-RUN npm run install
+RUN npm install
 
 COPY * ./
 RUN npm run build
