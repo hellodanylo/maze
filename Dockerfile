@@ -15,4 +15,4 @@ COPY gulpfile.js index.js package.json ./
 RUN npm run build
 
 EXPOSE 80
-CMD node index.js
+ENTRYPOINT ["node", "index.js"]
