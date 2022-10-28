@@ -66,7 +66,7 @@ class App extends React.Component {
 
     this.setState({
       welcome: false, 
-      miniMap: true
+      miniMap: false
     });
   }
 

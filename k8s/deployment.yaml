@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: maze
+  labels:
+    app: maze
+spec:
+  selector:
+    matchLabels:
+      app: maze
+  template:
+    metadata:
+      labels:
+        app: maze
+    spec:
+      containers:
+      - name: maze
+        image: maze:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 80

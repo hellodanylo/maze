@@ -31,6 +31,10 @@ export default class MiniMap extends React.Component {
       return;
     }
 
+    if(this.props.hidden) {
+        return;
+    }
+
     if(name !== Player.Events.MOVED || this.dom === undefined) {
       return;
     }
@@ -49,7 +53,7 @@ export default class MiniMap extends React.Component {
   }
 
   render(){
-    if(this.state.level === undefined) {
+    if(this.state.level === undefined || this.props.hidden) {
       return <div/>;
     }
 
